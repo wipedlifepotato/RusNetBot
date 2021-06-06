@@ -12,7 +12,7 @@ uint write_cb(char *in, uint size, uint nmemb, char * title)
   uint r;
   r = size * nmemb;
   char * pTitle;
- // printf("in: %s\n", in);
+ //l l printf("in: %s\n", in);
   if( (pTitle=strstr(in, TITLE_START)) != 0){
 	//puts("TITLE found");
 	printf("%s\n" ,pTitle);
@@ -42,12 +42,12 @@ void get_info_about_url(const char*url,char * buf)
     curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_cb);
     curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-    curl_easy_setopt(curl, CURLOPT_USERAGENT, "Mozilla/5.0 (Linux; Android 10; SM-G970F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.88 Mobile Safari/537.36 OPR/63.0.3216.58473.");
+    curl_easy_setopt(curl, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:59.0) Gecko/20100101 Firefox/59.0");
 
     //curl_easy_setopt(curl, CURLOPT_HEADER, 1L);
     //curl_easy_setopt(curl, CURLOPT_NOBODY, 1L);    // we don't need body
-    curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 5L);
-    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 5L);
+    curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 10L);
+    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10L);
 
 
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &title);
