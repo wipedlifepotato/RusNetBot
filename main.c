@@ -2,12 +2,6 @@
 
 int main(int count, char *strings[])
 {
-
-    int bytes;
-    char buf[1024];
-    char acClientRequest[1024] = {0};
-
-
     if ( count != 6 )
     {
         printf("usage: %s <hostname> <portnum> <nick> <username> <realname>\n", strings[0]);
