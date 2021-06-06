@@ -239,26 +239,32 @@ msg_handler(ircc c, const char ** splitted, size_t splitted_size){
 			get_info_about_url(splitted[i], about_page);
 			printf("About_Page: %s\n", about_page);
 			PRIVMSG(c, channel, about_page, 2);
-		}else if( (strstr(splitted[i], "!aq") != NULL) && i == 3){
+		}else if( (strstr(splitted[i], "!ac") != NULL) && i == 3){
 			i++;
+			bzero(buf, sizeof(buf));
 			while(i < splitted_size){
-				sprintf(buf, "%s ", splitted[i++]);
+				sprintf(buf, "%s %s", buf,splitted[i++]);
 			}
+			printf("%s\n", buf);
 			if(addQuote(channel, nickSender, buf)){
 				sprintf(buf, "%s цитата добавлена,у неё должен быть номер %d\n", nickSender, getQuotesLength());
 				PRIVMSG(c, channel, buf, 0);
 			}
 
-		}else if( (strstr(splitted[i], "!q") != NULL) && i == 3){
+		}else if( (strstr(splitted[i], "!c") != NULL) && i == 3){
 			char buf[BUF_SIZE];
 			i++;
-			if( atoll(splitted[i]) <= 0)
-				sprintf(buf, 
-				"%s, номер цитаты дан не правильным должен быть от 1-%s, а он->%lu"
-					, nickSender, getQuotesLength(), atoll(splitted[i]));
-			else
-				getQuote(splitted[i], buf);
-			
+			long long quote_count=getQuotesLength();
+			long long quote_id=atoll(splitted[i]);
+			printf("!c %d %d\n", quote_count, quote_id);
+			if(quote_id == 0 || quote_id > quote_count || quote_count < 0){
+				sprintf(buf, "%s, номер цитаты дан не правильным должен быть от 1-%d",nickSender, quote_count);
+				PRIVMSG(c, channel, buf, 0);
+				break;
+			}
+
+			puts("Цитата найдена");
+			getQuote(splitted[i], buf);
 			PRIVMSG(c, channel, buf, 0);
 			break;			
 		}

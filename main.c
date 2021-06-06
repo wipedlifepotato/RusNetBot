@@ -13,7 +13,7 @@ int main(int count, char *strings[])
 
 
     regOnServ(con, strings[3], strings[4], strings[5]);
-    joinChn(con, "#ru");
+    joinChn(con, "#ru","#mogi","#magi");
     recvHandler(con);
     freeConnect(&con);
     return 0;
