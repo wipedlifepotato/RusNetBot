@@ -55,3 +55,6 @@ void free_splitted(char  ** what, size_t n);
 
 void PRIVMSG(ircc c, const char * chnusr, const char * msg, const unsigned char color);
 
+void *
+thread_bot(void * connection);
+
