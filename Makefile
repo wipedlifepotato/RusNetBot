@@ -1,2 +1,2 @@
 all:
-	gcc *.c -lcurl -lssl -lcrypto -lpq -lpthread -liniparser -g3
+	gcc *.c -lcurl -lssl -lcrypto -lpq -g3
