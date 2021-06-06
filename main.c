@@ -7,10 +7,12 @@ int main(int count, char *strings[])
         printf("usage: %s <hostname> <portnum> <nick> <username> <realname>\n", strings[0]);
         exit(0);
     }
-    struct IRCConnection con = OpenConnection(strings[1], atoi(strings[2]), true);
+    if(!init_psql())abort();
+    struct IRCConnection con = OpenConnection(strings[1], atoi(strings[2]), false);
+
 
     regOnServ(con, strings[3], strings[4], strings[5]);
-    joinChn(con, "#mogi","#magi");
+    joinChn(con, "#ru");
     recvHandler(con);
     freeConnect(&con);
     return 0;

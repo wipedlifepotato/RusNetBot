@@ -1,2 +1,2 @@
 all:
-	gcc *.c -lcurl -lssl -lcrypto -g
+	gcc *.c -lcurl -lssl -lcrypto -lpq -g

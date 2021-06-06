@@ -5,3 +5,7 @@
 static PGconn * psql_conn;
 void pqErr(PGconn *conn, PGresult *res);
 int init_psql(void);
+long long getQuotesLength(void);
+int addQuote(const char * channel, const char * author, const char * msg);
+void getQuote(const char * id, char * rBuf);
+

@@ -3,7 +3,7 @@
 //#include <tidy/tidybuffio.h>
 #include <curl/curl.h>
 #include<string.h>
-#define TITLE_START "<title>"
+#define TITLE_START "<title"
 #define TITLE_END "</title>" 
 /* curl write callback, to fill tidy's input buffer...  */
 uint write_cb(char *in, uint size, uint nmemb, char * title)
@@ -15,8 +15,10 @@ uint write_cb(char *in, uint size, uint nmemb, char * title)
  //l l printf("in: %s\n", in);
   if( (pTitle=strstr(in, TITLE_START)) != 0){
 	//puts("TITLE found");
-	printf("%s\n" ,pTitle);
-	pTitle+=sizeof(TITLE_START);
+	//pTitle+=sizeof(TITLE_START);
+	pTitle = strstr(pTitle, ">");
+	pTitle+=2;
+	//printf("%s\n" ,pTitle);
 	char *endTitle = strstr(in, TITLE_END);
 	if(endTitle != NULL){
 		memcpy(title, (pTitle-1), (endTitle-pTitle)+1);
@@ -42,7 +44,7 @@ void get_info_about_url(const char*url,char * buf)
     curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_cb);
     curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-    curl_easy_setopt(curl, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:59.0) Gecko/20100101 Firefox/59.0");
+    curl_easy_setopt(curl, CURLOPT_USERAGENT, "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.96 Safari/537.36");
 
     //curl_easy_setopt(curl, CURLOPT_HEADER, 1L);
     //curl_easy_setopt(curl, CURLOPT_NOBODY, 1L);    // we don't need body

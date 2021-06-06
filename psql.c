@@ -31,16 +31,16 @@ int init_psql(void){
     return 1;
 }
 
-long long getQuotesLength(const char * channel){
-    char *stm = "SELECT COUNT(*) FROM quotes where channel= $1";
-    const char *paramValues[1];
+long long getQuotesLength(void){
+    char *stm = "SELECT COUNT(*) FROM quotes";
+    const char *paramValues[0];
     //int         paramLengths[1];
     //int         paramFormats[1];
-    paramValues[0]=channel;
+    //paramValues[0]=channel;
 
     PGresult * res = PQexecParams(psql_conn,
                        stm,
-                       1,       /* one param */
+                       0,       /* one param */
                        NULL,    /* let the backend deduce param type */
                        paramValues,
                        NULL,    /* don't need param lengths since text */
@@ -89,46 +89,48 @@ addQuote(const char * channel, const char * author, const char * msg){
     return 1;
 
 }
-//
-//void
-//getQuote(const char * id, const char * chn, char * rBuf){
-//    char *stm = "SELECT COUNT * FROM quotes where channel=$1 AND id=$2";
-//    const char *paramValues[3];
-//  //  int         paramLengths[3];
-//  // int         paramFormats[3];
-//    paramValues[0]=chn;
-//    paramValues[1]=id;
-//
-//
-//    PGresult * res = PQexecParams(psql_conn,
-//                       stm,
-//                       2, //2 params
-//                       NULL,    /* let the backend deduce param type */
-//                       paramValues,
-//                       NULL,    /* don't need param lengths since text */
-//                       NULL,    /* default to all text params */
-//                       0);      /* ask for binary results */
-//
-//
-//    if (PQresultStatus(res) != PGRES_TUPLES_OK && PQresultStatus(res) != PGRES_COMMAND_OK){
-//        fprintf(stderr, "SELECT failed: %s", PQerrorMessage(psql_conn)); 
-//        pqErr(psql_conn, res);
-//	return 0;
-//    }
-//    return 1;
-//
-//}
 
+void
+getQuote(const char * id, char * rBuf){
+    char *stm = "SELECT * FROM quotes where id=$1";
+    const char *paramValues[1];
+  //  int         paramLengths[3];
+  // int         paramFormats[3];
+    paramValues[0]=id;
+
+
+    PGresult * res = PQexecParams(psql_conn,
+                       stm,
+                       1, //2 params
+                       NULL,    /* let the backend deduce param type */
+                       paramValues,
+                       NULL,    /* don't need param lengths since text */
+                       NULL,    /* default to all text params */
+                       0);      /* ask for binary results */
+
+
+    if (PQresultStatus(res) != PGRES_TUPLES_OK && PQresultStatus(res) != PGRES_COMMAND_OK){
+        fprintf(stderr, "SELECT failed: %s", PQerrorMessage(psql_conn)); 
+        pqErr(psql_conn, res);
+	return;
+    }
+//	PQexec(psql_conn, "CREATE TABLE IF NOT EXISTS quotes (id SERIAL, channel varchar(255), author varchar(255), msg TEXT);");   
+    sprintf(rBuf, "Q[%s]: %s (%s on %s)",PQgetvalue(res, 0, 0), PQgetvalue(res, 0, 3), PQgetvalue(res, 0, 2),PQgetvalue(res, 0, 1));
+    //printf("%s\n", PQgetvalue(res, 0, 0));// from res ROW table_column
+    return;
+
+}
+/*
 int main() {
     
-
-
-
     init_psql();
     printf("%d\n",getQuotesLength("#ru_notexist"));
     addQuote("#ru_notexist", "t", "ttt");
-
+    char buf[1024];
+    getQuote("20", buf);
+    printf("%s\n",buf);
     PQfinish(psql_conn);
 
     return 0;
 }
+*/

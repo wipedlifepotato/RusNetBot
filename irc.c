@@ -220,10 +220,13 @@ msg_handler(ircc c, const char ** splitted, size_t splitted_size){
 	sender=splitted[0];
 	channel=splitted[2];
 	splitted[3] = splitted[3]+1;
+	char nickSender[BUF_SIZE];
+	memcpy(nickSender, (sender+1), (strstr(sender,"!") -(sender+1)));
 
 	//printf("%s send msg in %s -> ", sender, channel);
 	#define UNALLOWED {i++;continue;}
 	size_t i = 3;
+	char buf[BUF_SIZE];
 	while( i < splitted_size ){
 		//printf("%s %d\n", splitted[i], i);
 		//if( regexec(&regex_url, splitted[i], 0, NULL, 0) == 0 ){
@@ -236,6 +239,28 @@ msg_handler(ircc c, const char ** splitted, size_t splitted_size){
 			get_info_about_url(splitted[i], about_page);
 			printf("About_Page: %s\n", about_page);
 			PRIVMSG(c, channel, about_page, 2);
+		}else if( (strstr(splitted[i], "!aq") != NULL) && i == 3){
+			i++;
+			while(i < splitted_size){
+				sprintf(buf, "%s ", splitted[i++]);
+			}
+			if(addQuote(channel, nickSender, buf)){
+				sprintf(buf, "%s цитата добавлена,у неё должен быть номер %d\n", nickSender, getQuotesLength());
+				PRIVMSG(c, channel, buf, 0);
+			}
+
+		}else if( (strstr(splitted[i], "!q") != NULL) && i == 3){
+			char buf[BUF_SIZE];
+			i++;
+			if( atoll(splitted[i]) <= 0)
+				sprintf(buf, 
+				"%s, номер цитаты дан не правильным должен быть от 1-%s, а он->%lu"
+					, nickSender, getQuotesLength(), atoll(splitted[i]));
+			else
+				getQuote(splitted[i], buf);
+			
+			PRIVMSG(c, channel, buf, 0);
+			break;			
 		}
 		i++;
 	}
