@@ -195,18 +195,17 @@ free_splitted(char  ** what, size_t n){
 }
 
 void 
-PRIVMSG(ircc c, const char * chnusr, const char * msg, const unsigned char color){
+PRIVMSG(ircc c, const char * chnusr, const char * msg, const unsigned short color){
 	char buf[BUF_SIZE];
 	bzero(buf, BUF_SIZE);
-	char color_buf[3];
-	if(color != 0){
-		color_buf[0]='';
-		color_buf[1]=color;
-		color_buf[2]='\0';
-	}else{
-		color_buf[0]='\0';
-		color_buf[1]='\0';
-	}
+	#define COLOR_CHAR ""
+	char color_buf[4];
+	bzero(color_buf, sizeof(color_buf));
+	if(color != 0)
+		sprintf(color_buf, COLOR_CHAR"%d", color);
+	else
+		sprintf(color_buf, "");
+	
 	sprintf(buf,"PRIVMSG %s :%s%s\r\n",chnusr, color_buf, msg);
 	printf("buf: %s\n", buf);
 	irc_sendMsg(c,buf);
@@ -238,7 +237,7 @@ msg_handler(ircc c, const char ** splitted, size_t splitted_size){
 			char buf[BUF_SIZE];
 			get_info_about_url(splitted[i], about_page);
 			printf("About_Page: %s\n", about_page);
-			PRIVMSG(c, channel, about_page, 2);
+			PRIVMSG(c, channel, about_page, 3);
 		}else if( (strstr(splitted[i], "!ac") != NULL) && i == 3){
 			i++;
 			bzero(buf, sizeof(buf));
@@ -255,8 +254,8 @@ msg_handler(ircc c, const char ** splitted, size_t splitted_size){
 			char buf[BUF_SIZE];
 			i++;
 			long long quote_count=getQuotesLength();
-			long long quote_id=atoll(splitted[i]);
-			printf("!c %d %d\n", quote_count, quote_id);
+			long long quote_id= ((i) < splitted_size) ? atoll(splitted[i]) : (rand() % quote_count)+1;
+			printf("!c %ld %ld\n", quote_count, quote_id);
 			if(quote_id == 0 || quote_id > quote_count || quote_count < 0){
 				sprintf(buf, "%s, номер цитаты дан не правильным должен быть от 1-%d",nickSender, quote_count);
 				PRIVMSG(c, channel, buf, 0);
@@ -264,9 +263,15 @@ msg_handler(ircc c, const char ** splitted, size_t splitted_size){
 			}
 
 			puts("Цитата найдена");
-			getQuote(splitted[i], buf);
+			char cID[100];
+			sprintf(cID,"%ld",quote_id);
+			getQuote(cID, buf);
 			PRIVMSG(c, channel, buf, 0);
 			break;			
+		}else if( (strstr(splitted[i], "!kubic") != NULL) && i == 3){
+			sprintf(buf, "Кубик выдал число: %d", (rand() % 7)+1);
+			PRIVMSG(c, channel, buf, 2);
+			break;
 		}
 		i++;
 	}
@@ -277,6 +282,7 @@ msg_handler(ircc c, const char ** splitted, size_t splitted_size){
 
 void 
 recvHandler(ircc c){
+    srand(time(NULL));
     char buf[BUF_SIZE];
     size_t rcvBytes;
     do{

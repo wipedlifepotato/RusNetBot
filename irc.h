@@ -53,7 +53,7 @@ void msg_handler(ircc c, const char ** splitted, const size_t splitted_size);
 char ** split_msg(char * buf, const char schar, size_t * splitted_size);
 void free_splitted(char  ** what, size_t n);
 
-void PRIVMSG(ircc c, const char * chnusr, const char * msg, const unsigned char color);
+void PRIVMSG(ircc c, const char * chnusr, const char * msg, const unsigned short color);
 
 void *
 thread_bot(void * connection);
