@@ -114,8 +114,11 @@ getQuote(const char * id, char * rBuf){
         pqErr(psql_conn, res);
 	return;
     }
+
+    long long quote_count= getQuotesLength();
 //	PQexec(psql_conn, "CREATE TABLE IF NOT EXISTS quotes (id SERIAL, channel varchar(255), author varchar(255), msg TEXT);");   
-    sprintf(rBuf, "Q[%s]:%s (%s on %s)",PQgetvalue(res, 0, 0), PQgetvalue(res, 0, 3), PQgetvalue(res, 0, 2),PQgetvalue(res, 0, 1));
+    sprintf(rBuf, "Q[%s/%d]:%s (%s on %s)",PQgetvalue(res, 0, 0),quote_count,
+		    PQgetvalue(res, 0, 3), PQgetvalue(res, 0, 2),PQgetvalue(res, 0, 1));
     //printf("%s\n", PQgetvalue(res, 0, 0));// from res ROW table_column
     return;
 
