@@ -3,6 +3,7 @@
 //#include <tidy/tidybuffio.h>
 #include <curl/curl.h>
 #include<string.h>
+//#include<regex.h>
 #define TITLE_START "<title"
 #define TITLE_END "</title>" 
 /* curl write callback, to fill tidy's input buffer...  */
@@ -27,11 +28,38 @@ uint write_cb(char *in, uint size, uint nmemb, char * title)
 
   return r;
 }
-
+#define ELIF else if
+#define MAX_URL_SIZE 253
+#define MAX_ZONE_SIZE 63
+#define PROXY_I2P  "http://127.0.0.1:4444"
+#define PROXY_ONION "socks4a://127.0.0.1:9050"
 void get_info_about_url(const char*url,char * buf)
 //int main(int argc, char **argv)
 {
+    if(strlen(url) > MAX_URL_SIZE)
+	return;
+    char *t=strstr(url,"."), *zone=t;
 
+    _Bool isPathToFile = (strstr(t, "/") != NULL) ? 1 : 0;
+    while( (t = strstr(t,".")) != NULL){
+	    	if( !isPathToFile || strstr(t, "/") != NULL ){
+			zone = t;
+			t++;
+		}else break;
+    }
+    zone++;
+    size_t zsize = strlen(zone);
+    
+    if(strlen(zone) > MAX_ZONE_SIZE) return;
+
+    char real_zone[MAX_ZONE_SIZE];
+    bzero(real_zone, sizeof(real_zone));
+    for(unsigned short z = 0; z < MAX_ZONE_SIZE && zone[z]; z++){
+	if(  (zone[z] < 48 || zone[z] > 57) && (zone[z] < 'a' || zone[z] > 'z') ) break;
+	real_zone[z]=zone[z]; 
+    }
+    printf(".%s\n", real_zone);
+    
     CURL *curl;
     char curl_errbuf[CURL_ERROR_SIZE];
     int ret;
@@ -53,12 +81,19 @@ void get_info_about_url(const char*url,char * buf)
 
 
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &title);
+    
+    if(strncmp(real_zone,"i2p", sizeof("i2p")) == 0){
+		puts("Is I2P link");
+  		curl_easy_setopt(curl, CURLOPT_PROXY, PROXY_I2P);
 
+    }ELIF (strncmp(real_zone,"onion",sizeof("onion")) == 0){
+		puts("is onion link");
+  		curl_easy_setopt(curl, CURLOPT_PROXY, PROXY_ONION);
+    }
     char *ct;
-
     ret = curl_easy_perform(curl);
     if(ret == CURLE_OK) {
-       char *ct;
+
        /* ask for the content-type */
       ret = curl_easy_getinfo(curl, CURLINFO_CONTENT_TYPE, &ct);
       if((CURLE_OK == ret) && ct){

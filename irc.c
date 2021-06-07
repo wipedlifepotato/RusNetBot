@@ -210,6 +210,15 @@ PRIVMSG(ircc c, const char * chnusr, const char * msg, const unsigned short colo
 	printf("buf: %s\n", buf);
 	irc_sendMsg(c,buf);
 }
+unsigned long long  _strlen_without_space(void * buf){
+	unsigned long long s=0;
+	char * b=buf;
+	while(*(b++)){
+		if(*b == ' ') continue;
+		s++;
+	}
+	return s;
+}
 void 
 msg_handler(ircc c, const char ** splitted, size_t splitted_size){
 	/*if(!regex_inited){
@@ -220,6 +229,7 @@ msg_handler(ircc c, const char ** splitted, size_t splitted_size){
 	channel=splitted[2];
 	splitted[3] = splitted[3]+1;
 	char nickSender[BUF_SIZE];
+	bzero(nickSender, sizeof(nickSender));
 	memcpy(nickSender, (sender+1), (strstr(sender,"!") -(sender+1)));
 
 	//printf("%s send msg in %s -> ", sender, channel);
@@ -245,7 +255,11 @@ msg_handler(ircc c, const char ** splitted, size_t splitted_size){
 				sprintf(buf, "%s %s", buf,splitted[i++]);
 			}
 			printf("%s\n", buf);
-			if(addQuote(channel, nickSender, buf)){
+			if(_strlen_without_space(buf) < 15) {
+				sprintf(buf, "%s КоРоТкАя цитата какая-то, 15 символов над:(: !ac <цитата>", nickSender);
+				PRIVMSG(c, channel, buf, 4);
+			}
+			else if(addQuote(channel, nickSender, buf)){
 				sprintf(buf, "%s цитата добавлена,у неё должен быть номер %d\n", nickSender, getQuotesLength());
 				PRIVMSG(c, channel, buf, 0);
 			}
@@ -269,10 +283,20 @@ msg_handler(ircc c, const char ** splitted, size_t splitted_size){
 			PRIVMSG(c, channel, buf, 0);
 			break;			
 		}else if( (strstr(splitted[i], "!kubic") != NULL) && i == 3){
-			sprintf(buf, "Кубик выдал число: %d", (rand() % 7)+1);
+			sprintf(buf, "%s, Кубик выдал число: %d", nickSender, (rand() % 7)+1);
 			PRIVMSG(c, channel, buf, 2);
 			break;
+		}else if( (strstr(splitted[i], "!source") != NULL) && i == 3){
+			sprintf(buf, "%s", "https://github.com/wipedlifepotato/RusNetBot");
+			PRIVMSG(c, channel, buf, 0);
+			break;
+		}else if( (strstr(splitted[i], "!help") != NULL) && i == 3){
+			sprintf(buf, "%s", "!ac <quote> !c <num-quote> !kubic !source ...");
+			PRIVMSG(c, channel, buf, 0);
+			break;
 		}
+
+
 		i++;
 	}
 	#undef UNALLOWED
