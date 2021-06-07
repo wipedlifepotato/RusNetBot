@@ -198,13 +198,13 @@ void
 PRIVMSG(ircc c, const char * chnusr, const char * msg, const unsigned short color){
 	char buf[BUF_SIZE];
 	bzero(buf, BUF_SIZE);
-	#define COLOR_CHAR ""
+	#define COLOR_CHAR ""
 	char color_buf[4];
 	bzero(color_buf, sizeof(color_buf));
 	if(color != 0)
 		sprintf(color_buf, COLOR_CHAR"%d", color);
 	else
-		sprintf(color_buf, "");
+		sprintf(color_buf, COLOR_CHAR"");
 	
 	sprintf(buf,"PRIVMSG %s :%s%s\r\n",chnusr, color_buf, msg);
 	printf("buf: %s\n", buf);
