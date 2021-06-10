@@ -98,27 +98,35 @@ void irc_sendMsg(ircc c, const char * msg){
 size_t irc_recvMsg(ircc c, char * buf, size_t n){
 	if(c.isSSLConnection)
 		return SSL_read(c.ssl_socket, buf, n); 
-	return read(c.socket, buf, n);
+	return recv(c.socket, buf, n,0);
 }
 
 void 
 pingIfNeed(ircc c, const char * last_buf){
 		char * pPing;
-		char buf[BUF_SIZE];
 		if( (pPing=strstr(last_buf, "PING :")) != 0 ){
+
+			char buf[BUF_SIZE];
+			//bzero(buf,sizeof(BUF_SIZE));
+			size_t bufc=0;
+			void *sBuf = buf;
+			//size_t size_pong;
 			//puts("PING - PONG");
 			//PING :ZASDFDFSDF\n
 			pPing += 6;
 			//printf("%s\n",pPing);
-			char * tmp = pPing;
-			while(*(pPing) != '\n' && *(pPing) != '\0') *(pPing++);
+			//char * tmp = pPing;
+			while(*(pPing) != '\n' && *(pPing) != '\0'){
+				buf[bufc++]=*(pPing++);
+			}
+			buf[bufc++]='\0';
 			if(*pPing !='\n') return;
-			char pong[(pPing-tmp)+1];
-			memcpy(pong, tmp, (pPing-tmp));
-			pong[(pPing-tmp)+1]='\0';
 
-			sprintf(buf, "PONG %s\r\n", pong);
-			irc_sendMsg(c, buf);
+			printf("buf: %s\n",buf);
+			char pongLine[sizeof("PONG :")+bufc+sizeof("\r\n")+1];
+			sprintf(pongLine, "PONG :%s\r\n", buf);
+			printf("buf: %s\n",pongLine);
+			irc_sendMsg(c, pongLine);
 		}//if found PING 
 }
 
@@ -239,6 +247,11 @@ msg_handler(ircc c, const char ** splitted, size_t splitted_size){
 	while( i < splitted_size ){
 		//printf("%s %d\n", splitted[i], i);
 		//if( regexec(&regex_url, splitted[i], 0, NULL, 0) == 0 ){
+		printf("splitted_size: %d\n", splitted_size);
+		if( splitted[i] == 0 || splitted[i][0] == 0) {
+			printf("Warning splitted[%d] = 0!\n", i);
+			continue;
+		}
 		if(strstr(splitted[i], "http") != NULL){
 			if( strstr(splitted[i], "127.0.0.1") != NULL) UNALLOWED;
 			if( strstr(splitted[i], "192.168.") != NULL) UNALLOWED;
@@ -312,12 +325,13 @@ recvHandler(ircc c){
     do{
 	bzero(buf, BUF_SIZE);
 	rcvBytes=irc_recvMsg(c, buf, BUF_SIZE);
+	if(buf[0] == 0) break;
 	printf("Recv: %s\n", buf);
 	pingIfNeed(c,buf);
 
 	size_t size;
 	char ** splitted = split_msg(buf, ' ', &size);
-	//puts("Splitted:");
+	puts("Splitted:");
 	for(unsigned int i =0; i<size;i++){
 		//strcasecmp ignore case
 		if(strcmp(splitted[i], "PRIVMSG") == 0){
