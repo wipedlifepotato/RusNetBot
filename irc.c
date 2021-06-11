@@ -328,6 +328,7 @@ recvHandler(ircc c){
 	bzero(buf, BUF_SIZE);
 	rcvBytes=irc_recvMsg(c, buf, BUF_SIZE);
 	if(bStopSignal || buf[0] == 0){
+		bStopSignal = false;
 		break;
 	}
 	if(buf[0] == 0) break;
