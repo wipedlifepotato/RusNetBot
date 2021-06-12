@@ -60,6 +60,18 @@ OpenConnection(const char *hostname, int port, bool useSSL)
     addr.sin_family = AF_INET;
     addr.sin_port = htons(port);
     addr.sin_addr.s_addr = *(long*)(host->h_addr);
+
+    struct timeval timeout;
+    timeout.tv_sec=320;
+    timeout.tv_usec=0;
+    fd_set rfds;
+    FD_ZERO(&rfds);
+    FD_SET(ret.socket, &rfds);
+    if( select(ret.socket+1,&rfds,NULL,NULL,&timeout) == -1 ){
+		perror("select() timeout");
+    }
+
+
     if ( connect(ret.socket, (struct sockaddr*)&addr, sizeof(addr)) != 0 )
     {
         close(ret.socket);
@@ -96,9 +108,11 @@ void irc_sendMsg(ircc c, const char * msg){
 	 write(c.socket, msg, strlen(msg));
 }
 size_t irc_recvMsg(ircc c, char * buf, size_t n){
-	if(c.isSSLConnection)
+	if(c.isSSLConnection){
 		return SSL_read(c.ssl_socket, buf, n); 
-	return recv(c.socket, buf, n,0);
+	}
+	//puts("Read");
+	return read(c.socket, buf, n);
 }
 
 void 
@@ -342,7 +356,7 @@ recvHandler(ircc c){
 
 	size_t size;
 	char ** splitted = split_msg(buf, ' ', &size);
-	puts("Splitted:");
+	//puts("Splitted:");
 	for(unsigned int i =0; i<size;i++){
 		//strcasecmp ignore case
 		if(strcmp(splitted[i], "PRIVMSG") == 0){

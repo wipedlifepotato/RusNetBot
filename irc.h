@@ -31,6 +31,7 @@ static const char * unallowed_hosts[UNALLOWED_DOMAIN_COUNT] = {
 	"kekulen.ru",
 	"privetalena.ru"
 };
+/*Union there is not will works, because ssl_socket works though int socket*/
 struct IRCConnection{
 	int socket;
 	SSL * ssl_socket;
