@@ -211,6 +211,7 @@ void
 free_splitted(char  ** what, size_t n){
 	for(n;n--;){
 		if(n == 0) break;
+		if( what[n][0] == 0 ) continue;
 		free((void*) (what[n-1]) );
 	}
 	free((void*)what);
@@ -362,6 +363,7 @@ recvHandler(ircc c){
 		if(strcmp(splitted[i], "PRIVMSG") == 0){
 			msg_handler(c, (const char**)splitted, size);
 		}
+		else if( strcmp(splitted[i], "ERROR") == 0 && i == 0) break;
 		//puts(splitted[i]);
 	}
 	free_splitted(splitted,size);
