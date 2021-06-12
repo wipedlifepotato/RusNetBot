@@ -104,16 +104,27 @@ void get_info_about_url(const char*url,char * buf)
     if(ret == CURLE_OK) {
 
 	GETFILESIZE;
+	for(unsigned int x =0;x < strlen(title); x++){
+		if( title[x] == '\n' || title[x] == '\r'){
+			printf("Found change to ' '\n");
+		       	title[x]=' ';
+		}else printf("Not found :%d %c\n", x, title[x]);
+	}
+	
        /* ask for the content-type */
       if((CURLE_OK == ret) && ct){
 		if( strstr(ct, "text/html") == 0){
 			//GETFILESIZE;
+			for(unsigned int x =0;x < strlen(ct); x++){
+				if( ct[x] == '\n' || ct[x] == '\r') ct[x]=' ';
+			}
 			sprintf(buf, "File, Type: %s @ %.2f Kb", ct, dl);
 		}else{
 			if(title[0] == 0)
 				sprintf(buf, "%s", ct);
 			else
 				sprintf(buf, "Title: %s", title);
+			
 		}
       }else{
 		if(title[0] !=0){
