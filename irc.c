@@ -1,6 +1,5 @@
 #include"irc.h"
 #include"curl.h"
-static bool bStopSignal=false;
 SSL_CTX* 
 InitCTX(void)
 {
@@ -258,10 +257,10 @@ msg_handler(ircc c, const char ** splitted, size_t splitted_size){
 	//	printf("splitted_size: %d\n", splitted_size);
 		if( splitted[i] == 0 || splitted[i][0] == 0) {
 			printf("Warning splitted[%d] = 0!\n", i);
-			bStopSignal=true;
-			break;
+			i++;
+			continue;
 		}
-		if(strstr(splitted[i], "http://") != NULL){
+		if(strstr(splitted[i], "http://") != NULL || strstr(splitted[i], "https://") != NULL ){
 		//	if( strstr(splitted[i], "127.0.0.1") != NULL) UNALLOWED;
 		//	if( strstr(splitted[i], "192.168.") != NULL) UNALLOWED;
 			//printf("Url: %s\n", splitted[i]);
@@ -334,8 +333,7 @@ recvHandler(ircc c){
     do{
 	bzero(buf, BUF_SIZE);
 	rcvBytes=irc_recvMsg(c, buf, BUF_SIZE);
-	if(bStopSignal || buf[0] == 0){
-		bStopSignal = false;
+	if(buf[0] == 0){
 		break;
 	}
 	if(buf[0] == 0) break;
