@@ -242,21 +242,28 @@ msg_handler(ircc c, const char ** splitted, size_t splitted_size){
 	memcpy(nickSender, (sender+1), (strstr(sender,"!") -(sender+1)));
 
 	//printf("%s send msg in %s -> ", sender, channel);
-	#define UNALLOWED {i++;continue;}
-	size_t i = 3;
+	#define UNALLOWED {return;}
+	size_t i = 0;
+	for(i=0; i < splitted_size;i++){
+		for(unsigned un = 0; un < UNALLOWED_DOMAIN_COUNT;un++){
+			//printf("i: %d;un:%d\n",i,un);
+			if( strstr(splitted[i], unallowed_hosts[un]) != NULL) UNALLOWED;
+		}
+	}
+	i = 3;
 	char buf[BUF_SIZE];
 	while( i < splitted_size ){
 		//printf("%s %d\n", splitted[i], i);
 		//if( regexec(&regex_url, splitted[i], 0, NULL, 0) == 0 ){
-		printf("splitted_size: %d\n", splitted_size);
+	//	printf("splitted_size: %d\n", splitted_size);
 		if( splitted[i] == 0 || splitted[i][0] == 0) {
 			printf("Warning splitted[%d] = 0!\n", i);
 			bStopSignal=true;
 			break;
 		}
 		if(strstr(splitted[i], "http") != NULL){
-			if( strstr(splitted[i], "127.0.0.1") != NULL) UNALLOWED;
-			if( strstr(splitted[i], "192.168.") != NULL) UNALLOWED;
+		//	if( strstr(splitted[i], "127.0.0.1") != NULL) UNALLOWED;
+		//	if( strstr(splitted[i], "192.168.") != NULL) UNALLOWED;
 			//printf("Url: %s\n", splitted[i]);
 			char about_page[BUF_SIZE];
 			char buf[BUF_SIZE];

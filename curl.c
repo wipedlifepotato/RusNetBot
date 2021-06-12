@@ -136,13 +136,7 @@ void get_info_about_url(const char*url,char * buf)
 
 
 
-    return ret;
- 
-
-  
-
- 
-  return 0;
+    return;
 }
 #undef TITLE_START
 #undef TITLE_END  

@@ -24,6 +24,13 @@ static volatile bool ssl_inited=false;
 /*static regex_t regex_url;
 static volatile bool regex_inited =false;*/
 
+#define UNALLOWED_DOMAIN_COUNT 4
+static const char * unallowed_hosts[UNALLOWED_DOMAIN_COUNT] = {
+	"127.0.0",
+	"192.168.",
+	"kekulen.ru",
+	"privetalena.ru"
+};
 struct IRCConnection{
 	int socket;
 	SSL * ssl_socket;
