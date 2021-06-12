@@ -261,7 +261,7 @@ msg_handler(ircc c, const char ** splitted, size_t splitted_size){
 			bStopSignal=true;
 			break;
 		}
-		if(strstr(splitted[i], "http") != NULL){
+		if(strstr(splitted[i], "http://") != NULL){
 		//	if( strstr(splitted[i], "127.0.0.1") != NULL) UNALLOWED;
 		//	if( strstr(splitted[i], "192.168.") != NULL) UNALLOWED;
 			//printf("Url: %s\n", splitted[i]);
