@@ -52,7 +52,7 @@ void get_info_about_url(const char*url,char * buf)
 {
     printf("url: %s\n",url);
     char *t=strstr(url,"."), *zone=t;
-
+    if(t == NULL) return;
     _Bool isPathToFile = (strstr(t, "/") != NULL) ? 1 : 0;
     while( (t = strstr(t,".")) != NULL){
 	    	if( !isPathToFile || strstr(t, "/") != NULL ){
@@ -104,6 +104,8 @@ void get_info_about_url(const char*url,char * buf)
     if(ret == CURLE_OK) {
 
 	GETFILESIZE;
+
+	if(ct == NULL) return;
 	for(unsigned int x =0;x < strlen(title); x++){
 		if( title[x] == '\n' || title[x] == '\r'){
 			printf("Found change to ' '\n");
@@ -136,6 +138,8 @@ void get_info_about_url(const char*url,char * buf)
       fprintf(stderr, "%s", curl_errbuf);
       if( title[0] == 0 ){
 	GETFILESIZE;
+
+	if(ct == NULL) return;
 	sprintf(buf, "File, Type: %s @ %.2f Kb", ct, dl);
 	//sprintf(buf, "%s",curl_errbuf);
       }

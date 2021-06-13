@@ -243,6 +243,40 @@ unsigned long long  _strlen_without_space(void * buf){
 	return s;
 }
 void 
+welcome_handler(ircc c, const char ** splitted, size_t splitted_size, bool isJoin){
+	const char *sender, *channel;
+	sender=splitted[0];
+//	sender=sender+1;
+	channel=splitted[2];
+//	channel=channel+1;
+	size_t sChannel = strlen(channel);
+	char channel_[sChannel+1];
+	if(isJoin)
+		strcpy(channel_,channel+1);
+	else
+		strcpy(channel_, "#ru");
+	for(unsigned int i = sChannel-1;i--;){
+		if(i == sChannel-1) channel_[i] = '\0';
+		if( channel_[i]== '\n' || channel_[i] == '\r' ) {
+			channel_[i]='\0';
+			break;
+		}
+	}
+	
+	char nickSender[BUF_SIZE];
+	char buf[BUF_SIZE];
+	bzero(nickSender, sizeof(nickSender));
+	memcpy(nickSender, (sender+1), (strstr(sender,"!") -(sender+1)));
+	if(isJoin)
+		sprintf(buf,"%s, добро пожаловать на канал :)\n", nickSender);
+	else
+		sprintf(buf,"%s, прощай...Это всё из-за темных...\n", nickSender);
+	printf("Sender: %s\n channel:%s\n",nickSender,channel_);
+	printf("buf:%s \n",buf);
+	PRIVMSG(c, channel_, buf, 2);
+}
+
+void 
 msg_handler(ircc c, const char ** splitted, size_t splitted_size){
 	/*if(!regex_inited){
 		if(regcomp(&regex_url, URL_REGEX, 0) != 0) abort();
@@ -281,7 +315,12 @@ msg_handler(ircc c, const char ** splitted, size_t splitted_size){
 			//printf("Url: %s\n", splitted[i]);
 			char about_page[BUF_SIZE];
 			char buf[BUF_SIZE];
+			bzero(about_page,sizeof(about_page));
 			get_info_about_url(splitted[i], about_page);
+			if(about_page[0] == 0){
+				i++;
+			       	continue;
+			}
 			printf("About_Page: %s\n", about_page);
 			PRIVMSG(c, channel, about_page, 3);
 		}else if( (strstr(splitted[i], "!ac") != NULL) && i == 3){
@@ -362,7 +401,13 @@ recvHandler(ircc c){
 		//strcasecmp ignore case
 		if(strcmp(splitted[i], "PRIVMSG") == 0){
 			msg_handler(c, (const char**)splitted, size);
-		}
+		}//else if( i == 1 && (strcmp(splitted[i], "JOIN") == 0 || strcmp(splitted[i],"PART") == 0
+		//		       	|| strcmp(splitted[i], "QUIT") == 0 ) ){
+		//	bool isJoin=false;
+		//	if( splitted[i][0]=='J' ) isJoin=true;
+			//puts("Welcome Handler");
+			//welcome_handler(c, (const char**)splitted, size, isJoin);
+		//}
 		else if( strcmp(splitted[i], "ERROR") == 0 && i == 0) break;
 		//puts(splitted[i]);
 	}

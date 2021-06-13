@@ -12,7 +12,7 @@ int main(int count, char *strings[])
     while(1){
     	struct IRCConnection con = OpenConnection(strings[1], atoi(strings[2]), ssl);
     	regOnServ(con, strings[3], strings[4], strings[5]);
-    	joinChn(con, "#ru","#mogi","#magi");
+    	joinChn(con, "#mogi","#magi","#ru");
     	recvHandler(con);
     	freeConnect(&con);
     }
