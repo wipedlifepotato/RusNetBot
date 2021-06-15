@@ -295,7 +295,10 @@ msg_handler(ircc c, const char ** splitted, size_t splitted_size){
 	for(i=0; i < splitted_size;i++){
 		for(unsigned un = 0; un < UNALLOWED_DOMAIN_COUNT;un++){
 			//printf("i: %d;un:%d\n",i,un);
-			if( strstr(splitted[i], unallowed_hosts[un]) != NULL) UNALLOWED;
+			if( strstr(splitted[i], unallowed_hosts[un]) != NULL){
+				splitted[3] = splitted[3] - 1;
+			       	UNALLOWED;
+			}
 		}
 	}
 	i = 3;
@@ -331,11 +334,11 @@ msg_handler(ircc c, const char ** splitted, size_t splitted_size){
 			}
 			printf("%s\n", buf);
 			if(_strlen_without_space(buf) < 15) {
-				sprintf(buf, "%s КоРоТкАя цитата какая-то, 15 символов над:(: !ac <цитата>", nickSender);
+				sprintf(buf, "%s, КоРоТкАя цитата какая-то, 15 символов над:(: !ac <цитата>", nickSender);
 				PRIVMSG(c, channel, buf, 4);
 			}
 			else if(addQuote(channel, nickSender, buf)){
-				sprintf(buf, "%s цитата добавлена,у неё должен быть номер %d\n", nickSender, getQuotesLength());
+				sprintf(buf, "%s, цитата добавлена,у неё должен быть номер %d\n", nickSender, getQuotesLength());
 				PRIVMSG(c, channel, buf, 0);
 			}
 
