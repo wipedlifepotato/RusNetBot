@@ -1,4 +1,10 @@
 #include"irc.h"
+static pingServ(struct IRCConnection * con){
+	while(con->socket){
+		sleep(30);
+		irc_sendMsg(*con, "PING");
+	}
+}
 
 int main(int count, char *strings[])
 {
@@ -13,8 +19,11 @@ int main(int count, char *strings[])
     	struct IRCConnection con = OpenConnection(strings[1], atoi(strings[2]), ssl);
     	regOnServ(con, strings[3], strings[4], strings[5]);
     	joinChn(con, "#mogi","#magi","#ru");
+	pthread_t p;
+	pthread_create(&p, NULL, pingServ, (void*)&con);
     	recvHandler(con);
     	freeConnect(&con);
+	pthread_exit(&p);
     }
     return 0;
 }

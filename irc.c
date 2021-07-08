@@ -1,5 +1,6 @@
 #include"irc.h"
 #include"curl.h"
+#include <fcntl.h>
 SSL_CTX* 
 InitCTX(void)
 {
@@ -41,11 +42,14 @@ struct IRCConnection
 OpenConnection(const char *hostname, int port, bool useSSL)
 {
     struct IRCConnection ret;
-    if(useSSL)
+    ret.isSSLConnection = false;
+    if(useSSL){
 	if(!ssl_inited){
 		SSL_library_init();
 		ssl_inited=true;
 	}
+    ret.isSSLConnection = true;
+    }
 
 
     struct hostent *host;
@@ -56,13 +60,14 @@ OpenConnection(const char *hostname, int port, bool useSSL)
         abort();
     }
     ret.socket = socket(PF_INET, SOCK_STREAM, 0);
+
     bzero(&addr, sizeof(addr));
     addr.sin_family = AF_INET;
     addr.sin_port = htons(port);
     addr.sin_addr.s_addr = *(long*)(host->h_addr);
 
     struct timeval timeout;
-    timeout.tv_sec=320;
+    timeout.tv_sec=120;
     timeout.tv_usec=0;
     fd_set rfds;
     FD_ZERO(&rfds);
@@ -71,7 +76,8 @@ OpenConnection(const char *hostname, int port, bool useSSL)
 		perror("select() timeout");
     }
 
-
+    //int oldflags =fcntl(ret.socket, F_GETFL, NULL);
+    //fcntl(ret.socket, F_SETFL, oldflags|O_NONBLOCK);
     if ( connect(ret.socket, (struct sockaddr*)&addr, sizeof(addr)) != 0 )
     {
         close(ret.socket);
@@ -281,10 +287,13 @@ msg_handler(ircc c, const char ** splitted, size_t splitted_size){
 	/*if(!regex_inited){
 		if(regcomp(&regex_url, URL_REGEX, 0) != 0) abort();
 	}*/
+	if(splitted_size < 3) return;
 	const char *sender, *channel;
 	sender=splitted[0];
+	if(strstr(sender,"!") == NULL) return;
 	channel=splitted[2];
 	splitted[3] = splitted[3]+1;
+
 	char nickSender[BUF_SIZE];
 	bzero(nickSender, sizeof(nickSender));
 	memcpy(nickSender, (sender+1), (strstr(sender,"!") -(sender+1)));
@@ -428,4 +437,5 @@ freeConnect(struct IRCConnection * con){
         
     }
     close(con->socket);
+    con->socket = 0;
 }
