@@ -2,11 +2,12 @@
 //#include <tidy/tidy.h>
 //#include <tidy/tidybuffio.h>
 #include <curl/curl.h>
+#define _GNU_SOURCE
 #include<string.h>
 //#include<regex.h>
 #define TITLE_START "<title"
 #define TITLE_END "</title>" 
-#define TITLE_SIZE 2056
+#define TITLE_SIZE 256
 /* curl write callback, to fill tidy's input buffer...  */
 uint write_cb(char *in, uint size, uint nmemb, char * title)
 {
@@ -15,15 +16,17 @@ uint write_cb(char *in, uint size, uint nmemb, char * title)
   r = size * nmemb;
   char * pTitle;
  //l l printf("in: %s\n", in);
-  if( (pTitle=strstr(in, TITLE_START)) != 0){
+  if( (pTitle=strcasestr(in, TITLE_START)) != 0){
 	//puts("TITLE found");
 	//pTitle+=sizeof(TITLE_START);
 	pTitle = strstr(pTitle, ">");
 	pTitle+=2;
 	//printf("%s\n" ,pTitle);
-	char *endTitle = strstr(in, TITLE_END);
+	char *endTitle = strcasestr(in, TITLE_END);
 	if(endTitle != NULL){
-		memcpy(title, (pTitle-1), (endTitle-pTitle)+1);
+		size_t memcpyCount=(endTitle-pTitle)+1;
+		if( memcpyCount > TITLE_SIZE ) memcpyCount = TITLE_SIZE-1;
+		memcpy(title, (pTitle-1), memcpyCount);
 		size_t tSize = strlen(title);
 		if(tSize < TITLE_SIZE) 
 			title[tSize] = '\0';

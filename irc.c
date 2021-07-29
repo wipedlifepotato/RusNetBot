@@ -1,6 +1,43 @@
 #include"irc.h"
 #include"curl.h"
 #include <fcntl.h>
+static time_t lastPage;
+static const char admin_nick[] = ADMIN_NICK;
+static const char * permamentbanned[]={
+	"localhost",
+	"cofob",
+	"owo"
+};static size_t permamentbanned_s = 3;
+
+static char ** banned;
+static size_t bannedS = 0;
+
+static bool userNotBanned(const char * nick){
+	for(unsigned int i =0; i < bannedS && banned[i] != NULL; i++){
+		if( strcasecmp(banned[i], nick) == 0){
+			return false;
+		}
+	}
+	for(unsigned int i = 0; i < permamentbanned_s; i++){
+		if( strcasecmp(permamentbanned[i], nick) == 0){
+			return false;
+		}
+	}
+	return true;
+}
+
+static void ban_user(const char * nick){
+	if( !userNotBanned(nick) ) return;
+	if( strcasecmp(admin_nick, nick) == 0 ) return;
+	bannedS++;
+	if(banned == NULL) banned=malloc(sizeof(char*));
+	else
+		banned = realloc(banned,sizeof(char*) * bannedS);
+	banned[bannedS-1] = malloc(sizeof(char) * strlen(nick) + 1);
+	strcpy(banned[bannedS-1], nick);	
+}
+
+
 SSL_CTX* 
 InitCTX(void)
 {
@@ -99,7 +136,7 @@ OpenConnection(const char *hostname, int port, bool useSSL)
 	    }
 	    ShowCerts(ret.ssl_socket);        /* get any certs */
 	    ret.isSSLConnection=true;
-    }//
+    }else  ret.isSSLConnection=false;
     ret.host=malloc( strlen(hostname)+1 * sizeof(char) );
     memcpy(ret.host, hostname, strlen(hostname));
     ret.host[strlen(hostname)]='\0';
@@ -250,6 +287,22 @@ unsigned long long  _strlen_without_space(void * buf){
 }
 void 
 welcome_handler(ircc c, const char ** splitted, size_t splitted_size, bool isJoin){
+const char * phrases[]={
+	"Ваш памятник будет построен в течение 900 дней",
+	"И его лик осенил всех вокруг",
+	"Всем по слогам его ник прочесть!",
+	"Здравствуйте, Ваше светлоличие",
+	"Здравствуйте, Здравствуйте. Туркменистан призывает хлопать Вам 5 минут в ладоши",
+	"^-^"
+};const size_t count_phrases = 6;
+const char * phrases_bye[]={
+	"Это всё из-за тёмных!",
+	"Всем грустить пять минут!",
+	"Очень жаль...",
+	"Кто его обидел, а?!",
+	"Кто ему не похлопал щас, а?"
+};const size_t count_phrases_bye = 5;
+	srand(time(NULL));
 	const char *sender, *channel;
 	sender=splitted[0];
 //	sender=sender+1;
@@ -261,6 +314,8 @@ welcome_handler(ircc c, const char ** splitted, size_t splitted_size, bool isJoi
 		strcpy(channel_,channel+1);
 	else
 		strcpy(channel_, "#ru");
+	if( strstr(sender,"k60") == NULL ) return;
+
 	for(unsigned int i = sChannel-1;i--;){
 		if(i == sChannel-1) channel_[i] = '\0';
 		if( channel_[i]== '\n' || channel_[i] == '\r' ) {
@@ -274,9 +329,9 @@ welcome_handler(ircc c, const char ** splitted, size_t splitted_size, bool isJoi
 	bzero(nickSender, sizeof(nickSender));
 	memcpy(nickSender, (sender+1), (strstr(sender,"!") -(sender+1)));
 	if(isJoin)
-		sprintf(buf,"%s, добро пожаловать на канал :)\n", nickSender);
+		sprintf(buf,"%s Вошёл! %s\n", nickSender, phrases[rand()%count_phrases]);
 	else
-		sprintf(buf,"%s, прощай...Это всё из-за темных...\n", nickSender);
+		sprintf(buf,"%s Ушёл! %s\n", nickSender, phrases_bye[rand()%count_phrases_bye]);
 	printf("Sender: %s\n channel:%s\n",nickSender,channel_);
 	printf("buf:%s \n",buf);
 	PRIVMSG(c, channel_, buf, 2);
@@ -312,7 +367,24 @@ msg_handler(ircc c, const char ** splitted, size_t splitted_size){
 	}
 	i = 3;
 	char buf[BUF_SIZE];
-	while( i < splitted_size ){
+	if(userNotBanned(nickSender))
+	while( i < splitted_size  ){
+		if( strcasecmp(nickSender, admin_nick) == 0 ){
+			//is admin;
+			puts("Is admin!");
+			if( strstr(splitted[i], "!ban") != NULL && i+1 <= splitted_size && i == 3){
+				puts("Ban user");
+				if( userNotBanned( splitted[i+1] ) == false ){
+					sprintf(buf, "%s забанен так то уже\n", splitted[i+1]);
+				}else{
+					ban_user(splitted[i+1]);
+					sprintf(buf, "%s забанен нахуй\n", splitted[i+1]);
+				}
+				puts("User banned");
+				PRIVMSG(c, channel, buf, 5);
+				break;
+			}else puts("Not found command.");
+		}
 		//printf("%s %d\n", splitted[i], i);
 		//if( regexec(&regex_url, splitted[i], 0, NULL, 0) == 0 ){
 	//	printf("splitted_size: %d\n", splitted_size);
@@ -325,6 +397,8 @@ msg_handler(ircc c, const char ** splitted, size_t splitted_size){
 		//	if( strstr(splitted[i], "127.0.0.1") != NULL) UNALLOWED;
 		//	if( strstr(splitted[i], "192.168.") != NULL) UNALLOWED;
 			//printf("Url: %s\n", splitted[i]);
+			if( (time(NULL) - lastPage) < 45) { i++; continue; }
+			lastPage=time(NULL);
 			char about_page[BUF_SIZE];
 			char buf[BUF_SIZE];
 			bzero(about_page,sizeof(about_page));
@@ -413,13 +487,13 @@ recvHandler(ircc c){
 		//strcasecmp ignore case
 		if(strcmp(splitted[i], "PRIVMSG") == 0){
 			msg_handler(c, (const char**)splitted, size);
-		}//else if( i == 1 && (strcmp(splitted[i], "JOIN") == 0 || strcmp(splitted[i],"PART") == 0
-		//		       	|| strcmp(splitted[i], "QUIT") == 0 ) ){
-		//	bool isJoin=false;
-		//	if( splitted[i][0]=='J' ) isJoin=true;
-			//puts("Welcome Handler");
-			//welcome_handler(c, (const char**)splitted, size, isJoin);
-		//}
+		}else if( i == 1 && (strcmp(splitted[i], "JOIN") == 0 || strcmp(splitted[i],"PART") == 0
+				       	|| strcmp(splitted[i], "QUIT") == 0 ) ){
+			bool isJoin=false;
+			if( splitted[i][0]=='J' ) isJoin=true;
+			puts("Welcome Handler");
+			welcome_handler(c, (const char**)splitted, size, isJoin);
+		}
 		else if( strcmp(splitted[i], "ERROR") == 0 && i == 0) break;
 		//puts(splitted[i]);
 	}
