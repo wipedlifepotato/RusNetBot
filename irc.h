@@ -11,7 +11,7 @@
 #include <stdarg.h>
 #include"psql.h"
 
-#define ADMIN_NICK "LiAlH4"
+#define ADMIN_NICK "acetone"
 //#include<regex.h>
 //#define URL_REGEX "https?:\\/\\/(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b([-a-zA-Z0-9()@:%_\\+.~#?&//=]*)"
 

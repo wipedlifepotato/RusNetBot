@@ -4,13 +4,32 @@
 static time_t lastPage;
 static const char admin_nick[] = ADMIN_NICK;
 static const char * permamentbanned[]={
-	"localhost",
-	"cofob",
-	"owo"
-};static size_t permamentbanned_s = 3;
+//	"localhost",
+//	"cofob",
+	"Daff",
+	"GreenBich"
+};static size_t permamentbanned_s = 2;
 
 static char ** banned;
 static size_t bannedS = 0;
+
+static char ** gods;
+static size_t godsS=0;
+
+static void restartCounters(void){
+	for(unsigned int i =0; i < bannedS && banned[i] != NULL; i++){
+		free(banned[i]);
+	}	
+	bannedS=0;
+	for(unsigned int i =0; i < godsS && gods[i] != NULL; i++){
+		free(gods[i]);			
+	}
+	free(banned);
+	free(gods);
+	banned=NULL;
+	gods=NULL;
+	godsS=0;
+}
 
 static bool userNotBanned(const char * nick){
 	for(unsigned int i =0; i < bannedS && banned[i] != NULL; i++){
@@ -24,6 +43,31 @@ static bool userNotBanned(const char * nick){
 		}
 	}
 	return true;
+}
+
+
+static bool userIsGod(const char * nick){
+	for(unsigned int i =0; i < godsS && gods[i] != NULL; i++){
+		if( strcasecmp(gods[i], nick) == 0){
+			return true;
+		}
+	}
+	if( strcasecmp(admin_nick,nick) == 0) return true;
+	return false;
+}
+
+static bool userNotGod(const char * nick){
+	return !userIsGod(nick);
+}
+
+static void add_god(const char * nick){
+		if( !userNotGod(nick) ) return;
+		godsS++;
+		if(gods == NULL) gods=malloc(sizeof(char*));
+		else
+			gods = realloc(gods,sizeof(char*) * godsS);
+		gods[godsS-1] = malloc(sizeof(char) * strlen(nick) + 1);
+		strcpy(gods[godsS-1], nick);	
 }
 
 static void ban_user(const char * nick){
@@ -369,12 +413,13 @@ msg_handler(ircc c, const char ** splitted, size_t splitted_size){
 	char buf[BUF_SIZE];
 	if(userNotBanned(nickSender))
 	while( i < splitted_size  ){
-		if( strcasecmp(nickSender, admin_nick) == 0 ){
+		if( strcasecmp(nickSender, admin_nick) == 0 || userIsGod(nickSender) ){
 			//is admin;
 			puts("Is admin!");
-			if( strstr(splitted[i], "!ban") != NULL && i+1 <= splitted_size && i == 3){
-				puts("Ban user");
-				if( userNotBanned( splitted[i+1] ) == false ){
+			if( strcasestr(splitted[i], ">ban") != NULL && i+1 <= splitted_size && i == 3){
+				if( userIsGod( nickSender ) ){
+					sprintf(buf, "%s так то бог блядь\n", splitted[i+1]);
+				}else if( userNotBanned( splitted[i+1] ) == false ){
 					sprintf(buf, "%s забанен так то уже\n", splitted[i+1]);
 				}else{
 					ban_user(splitted[i+1]);
@@ -382,6 +427,26 @@ msg_handler(ircc c, const char ** splitted, size_t splitted_size){
 				}
 				puts("User banned");
 				PRIVMSG(c, channel, buf, 5);
+				break;
+			}else if( strcasestr(splitted[i], ">god") != NULL && i+1 <= splitted_size && i == 3){
+				if( userIsGod( splitted[i+1] )){
+					sprintf(buf, "%s так то уже боженька...\n", splitted[i+1]);
+				}
+				else{
+					add_god(splitted[i+1]);
+					sprintf(buf, "%s теперь бог этого бота\n", splitted[i+1]);
+				}
+				PRIVMSG(c, channel, buf, 7);
+				break;
+
+			}else if( strcasestr(splitted[i], ">restart") != NULL){
+				restartCounters();
+				sprintf(buf, "Обнулились.\n");
+				PRIVMSG(c, channel, buf, 6);
+				break;
+			}else if( strcasestr( splitted[i], ">nick") != NULL && i+1 <= splitted_size && i == 3){
+				sprintf(buf, "NICK %s\n", splitted[i+1]);
+				irc_sendMsg(c,buf);
 				break;
 			}else puts("Not found command.");
 		}
@@ -397,7 +462,8 @@ msg_handler(ircc c, const char ** splitted, size_t splitted_size){
 		//	if( strstr(splitted[i], "127.0.0.1") != NULL) UNALLOWED;
 		//	if( strstr(splitted[i], "192.168.") != NULL) UNALLOWED;
 			//printf("Url: %s\n", splitted[i]);
-			if( (time(NULL) - lastPage) < 45) { i++; continue; }
+			if(userNotGod( nickSender ) == true)
+				if( (time(NULL) - lastPage) < 45) { i++; continue; }
 			lastPage=time(NULL);
 			char about_page[BUF_SIZE];
 			char buf[BUF_SIZE];
@@ -409,7 +475,7 @@ msg_handler(ircc c, const char ** splitted, size_t splitted_size){
 			}
 			printf("About_Page: %s\n", about_page);
 			PRIVMSG(c, channel, about_page, 3);
-		}else if( (strstr(splitted[i], "!ac") != NULL) && i == 3){
+		}else if( (strstr(splitted[i], ">ac") != NULL) && i == 3){
 			i++;
 			bzero(buf, sizeof(buf));
 			while(i < splitted_size){
@@ -417,7 +483,7 @@ msg_handler(ircc c, const char ** splitted, size_t splitted_size){
 			}
 			printf("%s\n", buf);
 			if(_strlen_without_space(buf) < 15) {
-				sprintf(buf, "%s, КоРоТкАя цитата какая-то, 15 символов над:(: !ac <цитата>", nickSender);
+				sprintf(buf, "%s, КоРоТкАя цитата какая-то, 15 символов над:(: >ac <цитата>", nickSender);
 				PRIVMSG(c, channel, buf, 4);
 			}
 			else if(addQuote(channel, nickSender, buf)){
@@ -425,12 +491,12 @@ msg_handler(ircc c, const char ** splitted, size_t splitted_size){
 				PRIVMSG(c, channel, buf, 0);
 			}
 
-		}else if( (strstr(splitted[i], "!c") != NULL) && i == 3){
+		}else if( (strstr(splitted[i], ">c") != NULL) && i == 3){
 			char buf[BUF_SIZE];
 			i++;
 			long long quote_count=getQuotesLength();
 			long long quote_id= ((i) < splitted_size) ? atoll(splitted[i]) : (rand() % quote_count)+1;
-			printf("!c %ld %ld\n", quote_count, quote_id);
+			printf(">c %ld %ld\n", quote_count, quote_id);
 			if(quote_id == 0 || quote_id > quote_count || quote_count < 0){
 				sprintf(buf, "%s, номер цитаты дан не правильным должен быть от 1-%d",nickSender, quote_count);
 				PRIVMSG(c, channel, buf, 0);
@@ -443,16 +509,16 @@ msg_handler(ircc c, const char ** splitted, size_t splitted_size){
 			getQuote(cID, buf);
 			PRIVMSG(c, channel, buf, 0);
 			break;			
-		}else if( (strstr(splitted[i], "!kubic") != NULL) && i == 3){
+		}else if( (strstr(splitted[i], ">kubic") != NULL) && i == 3){
 			sprintf(buf, "%s, Кубик выдал число: %d", nickSender, (rand() % 7)+1);
 			PRIVMSG(c, channel, buf, 2);
 			break;
-		}else if( (strstr(splitted[i], "!source") != NULL) && i == 3){
+		}else if( (strstr(splitted[i], ">source") != NULL) && i == 3){
 			sprintf(buf, "%s", "https://github.com/wipedlifepotato/RusNetBot");
 			PRIVMSG(c, channel, buf, 0);
 			break;
-		}else if( (strstr(splitted[i], "!help") != NULL) && i == 3){
-			sprintf(buf, "%s", "!ac <quote> !c <num-quote> !kubic !source ...");
+		}else if( (strstr(splitted[i], ">help") != NULL) && i == 3){
+			sprintf(buf, "%s", ">ac <quote> >c <num-quote> >kubic >source; >god *nick* >ban *nick* >nick *nick*");
 			PRIVMSG(c, channel, buf, 0);
 			break;
 		}
